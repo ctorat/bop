@@ -1,0 +1,20 @@
+# Bop is a quick and minimal build utility to serve as an alternative to MAKE
+
+## Hooks
+
+# Hooks may be placed in the target build directory as such:
+
+```
+$TARGET/.bop/posthook.sh    - Runs after the build
+$TARGET/.bop/prehook.sh     - Runs before the build
+```
+
+To build a directory with CFILES, run:
+
+```
+user@host~$ : BOP_BUILD=$TARGET bop build
+```
+
+## Screenshot and example
+
+![bop](https://git.faracom.org/chloe/bop/raw/branch/main/.assets/bop.png)
