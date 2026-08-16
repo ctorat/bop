@@ -68,7 +68,7 @@ static int
 run_build(const char *build_dir, build_op_t bop)
 {
     char pathbuf[256];
-    int error;
+    int error = 0;
 
     /*
      * There is a pre-build hook to be located within the [BUILD_DIR]/.bop/prehook.sh which
@@ -78,7 +78,9 @@ run_build(const char *build_dir, build_op_t bop)
     if (bop != BUILD_OP_CLEAN) {
         snprintf(pathbuf, sizeof(pathbuf), "%s/.bop/prehook.sh", build_dir);
         if (access(pathbuf, F_OK) == 0)
-            bop_shell_hook(pathbuf);
+            error = bop_shell_hook(pathbuf);
+        if (error != 0)
+            return error;
     }
 
     error = bop_build_dir(build_dir, bop);
@@ -91,7 +93,9 @@ run_build(const char *build_dir, build_op_t bop)
     if (bop != BUILD_OP_CLEAN) {
         snprintf(pathbuf, sizeof(pathbuf), "%s/.bop/posthook.sh", build_dir);
         if (access(pathbuf, F_OK) == 0)
-            bop_shell_hook(pathbuf);
+            error = bop_shell_hook(pathbuf);
+        if (error != 0)
+            return error;
     }
 
     return 0;

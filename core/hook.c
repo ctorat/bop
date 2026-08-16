@@ -49,7 +49,7 @@ int
 bop_shell_hook(const char *hook_path)
 {
     pid_t child;
-    int status;
+    int status = 0;
 
     if (hook_path == NULL) {
         return -1;
@@ -62,5 +62,9 @@ bop_shell_hook(const char *hook_path)
         waitpid(child, &status, 0);
     }
 
-    return 0;
+    if (status != 0) {
+        printf("error: failure in '%s'\n", hook_path);
+    }
+
+    return status;
 }
