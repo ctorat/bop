@@ -61,20 +61,14 @@ opstr_to_op(const char *opstr)
  * Discover any possible hooks to be ran in the desired build directory and
  * begin the build process.
  *
- * @bop:  Build operation
+ * @build_dir:  Build directory
+ * @bop:        Build operation
  */
 static int
-run_build(build_op_t bop)
+run_build(const char *build_dir, build_op_t bop)
 {
     char pathbuf[256];
-    char *build_dir;
     int error;
-
-    build_dir = getenv(BOP_BUILD_ENV);
-    if (build_dir == NULL) {
-        printf("fatal: build directory not specified in %s\n", BOP_BUILD_ENV);
-        return -1;
-    }
 
     /*
      * There is a pre-build hook to be located within the [BUILD_DIR]/.bop/prehook.sh which
@@ -100,6 +94,49 @@ run_build(build_op_t bop)
             bop_shell_hook(pathbuf);
     }
 
+    return 0;
+}
+
+/*
+ * Build a directory list
+ *
+ * @bop:      Build operations
+ */
+static int
+build_dirlist(build_op_t bop)
+{
+    const char *dir_list;
+    char *p, *tok;
+    int error;
+
+    dir_list = getenv(BOP_BUILD_ENV);
+    if (dir_list == NULL) {
+        printf("fatal: build directories not specified in %s\n", BOP_BUILD_ENV);
+        return -1;
+    }
+
+    if ((p = strdup(dir_list)) == NULL) {
+        printf("fatal: out of memory\n");
+        return -1;
+    }
+
+    /* Build each directory specified */
+    tok = strtok(p, ":");
+    while (tok != NULL) {
+        printf("[->]\t\t%s\n", tok);
+        error = run_build(tok, bop);
+        if (error < 0)
+            break;
+        tok = strtok(NULL, ":");
+    }
+
+    if (error < 0) {
+        printf("fatal: failed to build %s\n", tok);
+        free(p);
+        return -1;
+    }
+
+    free(p);
     return 0;
 }
 
@@ -135,5 +172,5 @@ main(int argc, char **argv)
 
     build_opt = argv[optind++];
     bop = opstr_to_op(build_opt);
-    return run_build(bop);
+    return build_dirlist(bop);
 }
