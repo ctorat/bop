@@ -67,7 +67,7 @@ static char *
 trunc_extension(const char *filename)
 {
     char *p, *p1;
-    
+
     if ((p = strdup(filename)) == NULL) {
         return NULL;
     }
@@ -80,7 +80,7 @@ trunc_extension(const char *filename)
         }
         ++p1;
     }
-    
+
     free(p);
     return NULL;
 }
@@ -125,12 +125,12 @@ compile(const char *dirpath, struct dirent *dirent, struct build_params *params)
     if (dirpath == NULL || dirent == NULL) {
         return -1;
     }
-    
+
     /* Ignore non regulars */
     if (dirent->d_type != DT_REG) {
         return 0;
     }
-    
+
     filename = dirent->d_name;
     ext = get_extension(filename);
 
@@ -140,8 +140,8 @@ compile(const char *dirpath, struct dirent *dirent, struct build_params *params)
     }
 
     snprintf(pathbuf, sizeof(pathbuf), "%s/%s", dirpath, filename);
-        
-    /* Build all CFILES */ 
+
+    /* Build all CFILES */
     if (strcmp(ext, ".c") == 0) {
         error = invoke_cc(pathbuf, params);
         if (error < 0)
@@ -153,8 +153,40 @@ compile(const char *dirpath, struct dirent *dirent, struct build_params *params)
 
 }
 
+static void
+clean_object(const char *dirpath, struct dirent *dirent)
+{
+    char pathbuf[256];
+    const char *filename, *ext;
+
+    if (dirpath == NULL || dirent == NULL) {
+        return;
+    }
+
+    /* Ignore non regulars */
+    if (dirent->d_type != DT_REG) {
+        return;
+    }
+
+    /* Ignore files without an extension */
+    filename = dirent->d_name;
+    ext = get_extension(filename);
+    if (ext == NULL) {
+        return;
+    }
+
+    /* Ignore non object files */
+    if (strcmp(ext, ".o") != 0) {
+        return;
+    }
+
+    snprintf(pathbuf, sizeof(pathbuf), "%s/%s", dirpath, dirent->d_name);
+    printf("clean %s\n", pathbuf);
+    remove(pathbuf);
+}
+
 int
-bop_build_dir(const char *dirpath)
+bop_build_dir(const char *dirpath, build_op_t bop)
 {
     struct build_params params;
     struct dirent *dirent;
@@ -172,12 +204,21 @@ bop_build_dir(const char *dirpath)
         if (dirent->d_name[0] == '.') {
             continue;
         }
-        
-        error = compile(dirpath, dirent, &params);
-        if (error < 0) {
-            printf("fatal: failed to build '%s'\n", dirent->d_name);
-            return error;
+
+        switch (bop) {
+        case BUILD_OP_BUILD:
+            error = compile(dirpath, dirent, &params);
+            if (error < 0) {
+                printf("fatal: failed to build '%s'\n", dirent->d_name);
+                return error;
+            }
+
+            break;
+        case BUILD_OP_CLEAN:
+            clean_object(dirpath, dirent);
+            break;
         }
+
     }
 
     return 0;

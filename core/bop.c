@@ -26,14 +26,45 @@ help(void)
     printf("[-v]    Display the version\n");
     printf("-- build operations\n");
     printf("[build]     Build the directory specified by %s\n", BOP_BUILD_ENV);
+    printf("[clean]     Clean all object files\n");
+}
+
+/*
+ * Convert an operations string to a build_op_t type
+ */
+static inline build_op_t
+opstr_to_op(const char *opstr)
+{
+    if (opstr == NULL) {
+        return BUILD_OP_BUILD;
+    }
+
+    switch (*opstr) {
+    case 'b':
+        if (strcmp(opstr, "build") == 0) {
+            return BUILD_OP_BUILD;
+        }
+
+        break;
+    case 'c':
+        if (strcmp(opstr, "clean") == 0) {
+            return BUILD_OP_CLEAN;
+        }
+
+        break;
+    }
+
+    return BUILD_OP_BUILD;
 }
 
 /*
  * Discover any possible hooks to be ran in the desired build directory and
  * begin the build process.
+ *
+ * @bop:  Build operation
  */
 static int
-run_build(void)
+run_build(build_op_t bop)
 {
     char pathbuf[256];
     char *build_dir;
@@ -44,48 +75,32 @@ run_build(void)
         printf("fatal: build directory not specified in %s\n", BOP_BUILD_ENV);
         return -1;
     }
-    
+
     /*
      * There is a pre-build hook to be located within the [BUILD_DIR]/.bop/prehook.sh which
-     * is simply a shell script to be executed.
-     */ 
-    snprintf(pathbuf, sizeof(pathbuf), "%s/.bop/prehook.sh", build_dir);
-    if (access(pathbuf, F_OK) == 0) {
-        bop_shell_hook(pathbuf);
+     * is simply a shell script to be executed. Only run it if we aren't cleaning up the build
+     * space.
+     */
+    if (bop != BUILD_OP_CLEAN) {
+        snprintf(pathbuf, sizeof(pathbuf), "%s/.bop/prehook.sh", build_dir);
+        if (access(pathbuf, F_OK) == 0)
+            bop_shell_hook(pathbuf);
     }
 
-    error = bop_build_dir(build_dir);
+    error = bop_build_dir(build_dir, bop);
     if (error < 0) {
         printf("fatal: failed to build '%s'\n", build_dir);
         return error;
     }
-    
+
     /* Run the post hook if we can */
-    snprintf(pathbuf, sizeof(pathbuf), "%s/.bop/posthook.sh", build_dir);
-    if (access(pathbuf, F_OK) == 0) {
-        bop_shell_hook(pathbuf);
+    if (bop != BUILD_OP_CLEAN) {
+        snprintf(pathbuf, sizeof(pathbuf), "%s/.bop/posthook.sh", build_dir);
+        if (access(pathbuf, F_OK) == 0)
+            bop_shell_hook(pathbuf);
     }
 
     return 0;
-}
-
-static int
-do_build_op(const char *op)
-{
-    if (op == NULL) {
-        return -1;
-    }
-
-    switch (*op) {
-    case 'b':
-        if (strcmp(op, "build") == 0) {
-            return run_build();
-        }
-
-        break;
-    }
-    
-    return -1;
 }
 
 int
@@ -93,6 +108,7 @@ main(int argc, char **argv)
 {
     int opt;
     char *build_opt;
+    build_op_t bop;
 
     if (argc < 2) {
         printf("fatal: too few arguments\n");
@@ -118,5 +134,6 @@ main(int argc, char **argv)
     }
 
     build_opt = argv[optind++];
-    return do_build_op(build_opt);
+    bop = opstr_to_op(build_opt);
+    return run_build(bop);
 }
