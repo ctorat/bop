@@ -105,6 +105,7 @@ invoke_cc(const char *cfile_path, struct build_params *params)
     snprintf(outpath, sizeof(outpath), "%s.o", trunc_ext);
     child = fork();
     if (child == 0) {
+        printf("[CC]\t\t%s\n", cfile_path);
         execl(BOP_CC, BOP_CC, "-c", cfile_path, "-o", outpath, BOP_DEFAULT_CFLAGS, NULL);
     } else {
         waitpid(child, &status, 0);
