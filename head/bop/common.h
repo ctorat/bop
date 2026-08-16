@@ -10,7 +10,7 @@
 #define BOP_BUILD_ENV "BOP_BUILD"
 
 /* BOP version */
-#define BOP_VERSION "v0.0.1"
+#define BOP_VERSION "v0.0.2"
 
 /* Default BOP cflags */
 #define BOP_DEFAULT_CFLAGS "-Wall", "-pedantic", "-Ihead"
