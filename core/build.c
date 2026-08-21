@@ -88,10 +88,11 @@ trunc_extension(const char *filename)
 static int
 invoke_cc(const char *cfile_path, struct build_params *params)
 {
-    pid_t child;
-    int status;
     char *trunc_ext;
+    char cmdbuf[128];
     char outpath[256];
+    char outbuf[32];
+    FILE *pipe;
 
     if (cfile_path == NULL || params == NULL) {
         return -1;
@@ -103,17 +104,20 @@ invoke_cc(const char *cfile_path, struct build_params *params)
     }
 
     snprintf(outpath, sizeof(outpath), "%s.o", trunc_ext);
-    child = fork();
-    if (child == 0) {
-        printf("[CC]\t\t%s\n", cfile_path);
-        execl(BOP_CC, BOP_CC, "-c", cfile_path, "-o", outpath, BOP_DEFAULT_CFLAGS, NULL);
-    } else {
-        waitpid(child, &status, 0);
-        free(trunc_ext);
-        return status;
+    snprintf(cmdbuf, sizeof(cmdbuf), "%s -c %s -o %s", BOP_CC, cfile_path, outpath);
+
+    if ((pipe = popen(cmdbuf, "r")) == NULL) {
+        printf("fatal: failed to invoke cc\n");
+        return -1;
     }
 
-    return -1;
+    printf("[CC]\t\t%s\n", cfile_path);
+    while ((fgets(outbuf, sizeof(outbuf), pipe)) != NULL) {
+        printf("%s", outbuf);
+    }
+
+    pclose(pipe);
+    return 0;
 }
 
 static int
