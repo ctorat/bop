@@ -3,7 +3,6 @@
  * Provided under the BSD-3 clause.
  */
 
-#include <sys/wait.h>
 #include <dirent.h>
 #include <stdint.h>
 #include <stdlib.h>
