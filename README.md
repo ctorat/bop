@@ -7,6 +7,7 @@
 ```
 $TARGET/.bop/posthook.sh    - Runs after the build
 $TARGET/.bop/prehook.sh     - Runs before the build
+$TARGET/.bop/cflags         - CFLAGS passed to CC
 ```
 
 To build a directory with CFILES, run:
