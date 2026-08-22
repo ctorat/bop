@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026, Chloe M., et al.
+ * Copyright (c) 2026, Apollo Telephone Laboratories.
  * Provided under the BSD-3 clause.
  */
 
