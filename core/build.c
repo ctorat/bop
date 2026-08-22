@@ -552,6 +552,12 @@ bop_build_dir(const char *dirpath, build_op_t bop)
         }
     }
 
+    /* Remove the manifest if we are cleaning */
+    if (bop == BUILD_OP_CLEAN) {
+        build_dirs = true;
+        remove(pathbuf);
+    }
+
     /* Build from directory if not manifest */
     if (build_dirs) {
         error = build_from_dir(dirpath, dir, bop, &params);
