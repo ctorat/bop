@@ -521,7 +521,7 @@ bop_build_dir(const char *dirpath, build_op_t bop)
      * we are to read it build based on it.
      */
     snprintf(pathbuf, sizeof(pathbuf), "%s/.bop/manifest.hash", dirpath);
-    if (access(pathbuf, F_OK) != 0) {
+    if (access(pathbuf, F_OK) != 0 && bop != BUILD_OP_CLEAN) {
         hashfd = open(pathbuf, O_RDWR | O_CREAT, 0666);
         if (hashfd < 0) {
             perror("open");
@@ -532,7 +532,7 @@ bop_build_dir(const char *dirpath, build_op_t bop)
         params.hashfd = hashfd;
         snprintf(countbuf, sizeof(countbuf), "%zu\n", params.n_file);
         write(hashfd, countbuf, strlen(countbuf));
-    } else {
+    } else if (bop != BUILD_OP_CLEAN) {
         hashfd = open(pathbuf, O_RDWR);
         if (hashfd < 0) {
             perror("open");
