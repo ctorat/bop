@@ -1,1 +1,1 @@
-clang $BOP_PROJECT_ROOT/core/*.o -o bop
+clang $BOP_PROJECT_ROOT/core/*.o -lcrypto -lssl -o bop

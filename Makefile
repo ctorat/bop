@@ -10,7 +10,7 @@ all: bop
 
 .PHONY: bop
 bop: $(OFILES)
-	$(CC) $(OFILES) -o $@
+	$(CC) -lssl -lcrypto $(OFILES) -o $@
 
 -include $(DFILES)
 %.o: %.c
