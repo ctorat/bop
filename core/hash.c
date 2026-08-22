@@ -50,5 +50,8 @@ bop_hash_file(const char *path, char hashres[BOP_HASH_LEN])
     for (i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
         sprintf((char *)hashres + i*2, "%02X", hash[i]);
     }
+
+    munmap(mem, len);
+    close(fd);
     return 0;
 }
