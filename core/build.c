@@ -356,6 +356,7 @@ try_mf_make(const char *dirpath, const char *manifest_entry,
     bool *rehash)
 {
     char *p, *tok, *name;
+    char *save;
     char pathbuf[256];
     char hash[BOP_HASH_LEN];
     int error;
@@ -375,7 +376,7 @@ try_mf_make(const char *dirpath, const char *manifest_entry,
     }
 
     /* Grab the filename and construct a path */
-    tok = strtok(p, ":");
+    tok = strtok_r(p, ":", &save);
     snprintf(pathbuf, sizeof(pathbuf), "%s/%s", dirpath, tok);
 
     /* Copy the name */
@@ -385,7 +386,7 @@ try_mf_make(const char *dirpath, const char *manifest_entry,
     }
 
     /* Grab the old hash and create a new hash */
-    tok = strtok(NULL, ":");
+    tok = strtok_r(NULL, ":", &save);
     if ((error = bop_hash_file(pathbuf, hash)) < 0) {
         printf("[!] failed to hash %s\n", pathbuf);
         free(p);
