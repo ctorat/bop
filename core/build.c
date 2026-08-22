@@ -518,7 +518,7 @@ bop_build_dir(const char *dirpath, build_op_t bop)
 
     /*
      * If a manifest is not present then we should create one, otherwise
-     * we are to read it and populate the hashmap.
+     * we are to read it build based on it.
      */
     snprintf(pathbuf, sizeof(pathbuf), "%s/.bop/manifest.hash", dirpath);
     if (access(pathbuf, F_OK) != 0) {
