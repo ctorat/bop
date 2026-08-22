@@ -15,7 +15,3 @@ To build a directory with CFILES, run:
 ```
 user@host~$ : BOP_BUILD=$TARGET bop build
 ```
-
-## Screenshot and example
-
-![bop](https://git.faracom.org/chloe/bop/raw/branch/main/.assets/bop.png)
