@@ -3,10 +3,13 @@
  * Provided under the BSD-3 clause.
  */
 
+#include <sys/stat.h>
 #include <sys/mman.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <string.h>
 #include "bop/hash.h"
 
 int
@@ -14,8 +17,9 @@ bop_hash_file(const char *path, char hashres[BOP_HASH_LEN])
 {
     int fd;
     size_t len, i;
-    uint8_t hash[SHA256_DIGEST_LENGTH];
+    uint8_t *buf, hash[SHA256_DIGEST_LENGTH];
     void *mem;
+    struct stat sb;
 
     if (path == NULL) {
         return -1;
@@ -23,6 +27,12 @@ bop_hash_file(const char *path, char hashres[BOP_HASH_LEN])
 
     if ((fd = open(path, O_RDONLY)) < 0) {
         perror("open");
+        return -1;
+    }
+
+    if (stat(path, &sb) < 0) {
+        perror("stat");
+        close(fd);
         return -1;
     }
 
@@ -46,11 +56,25 @@ bop_hash_file(const char *path, char hashres[BOP_HASH_LEN])
         return -1;
     }
 
-    SHA256(mem, len, hash);
+    /* Allocate the buffer for packing */
+    buf = malloc(len + sizeof(sb.st_mtime));
+    if (buf == NULL) {
+        printf("fatal: failed to allocate hash buffer\n");
+        munmap(mem, len);
+        close(fd);
+        return -1;
+    }
+
+    /* Pack together access time and contents */
+    memcpy(buf, mem, len);
+    memcpy(&buf[len], &sb.st_mtime, sizeof(sb.st_atime));
+    SHA256(buf, len + sizeof(sb.st_atime), hash);
+
     for (i = 0; i < SHA256_DIGEST_LENGTH; ++i) {
         sprintf((char *)hashres + i*2, "%02X", hash[i]);
     }
 
+    free(buf);
     munmap(mem, len);
     close(fd);
     return 0;
